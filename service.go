@@ -15,6 +15,7 @@ import (
 type Keyspace struct {
 	Host     string
 	Keyspace string
+	Timeout time.Duration
 }
 
 // Keyspace is a ServiceMaker
@@ -40,24 +41,30 @@ func (k Keyspace) Make() (name string, service rpcx.Service, err error) {
 		return
 	}
 
-	service = KeyspaceService{client}
+	service = KeyspaceService{conn, client, k.Timeout}
 	return
 }
 
 type KeyspaceService struct {
-	Client rpcx.RpcClient
+	conn net.Conn              // TODO: used to do Closer on Service
+	client rpcx.RpcClient
+    timeout time.Duration
 }
 
 // KeyspaceService is a Service
-func (ks KeyspaceService) Serve(req interface{}, rsp interface{}, timeout time.Duration) (err error) {
-	client := ks.Client
+func (ks KeyspaceService) Close() error {
+	return ks.conn.Close()
+}
+
+func (ks KeyspaceService) Serve(req interface{}, rsp interface{}, cancel chan int) (err error) {
+	client := ks.client
 	var rpcReq *rpcx.RpcReq
 	var ok bool
 	if rpcReq, ok = req.(*rpcx.RpcReq); !ok {
 		panic("wrong type passed")
 	}
-	if timeout > 0 {
-		tick := time.After(timeout)
+	if ks.timeout > 0 {
+		tick := time.After(ks.timeout)
 
 		call := client.Go(rpcReq.Fn, rpcReq.Args, rsp, make(chan *rpc.Call, 1))
 		select {
