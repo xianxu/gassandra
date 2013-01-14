@@ -56,7 +56,7 @@ func (ks KeyspaceService) Close() error {
 	return ks.conn.Close()
 }
 
-func (ks KeyspaceService) Serve(req interface{}, rsp interface{}, cancel chan int) (err error) {
+func (ks KeyspaceService) Serve(req interface{}, rsp interface{}, cancel *bool) (err error) {
 	client := ks.client
 	var rpcReq *rpcx.RpcReq
 	var ok bool
