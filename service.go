@@ -4,11 +4,16 @@ package gassandra
 // Supervisor, Replaceable and Cluster.
 import (
 	thrift "github.com/samuel/go-thrift"
-	"log"
+	"fmt"
 	"net"
 	"net/rpc"
 	"github.com/xianxu/rpcx"
+	"github.com/xianxu/gostrich"
 	"time"
+)
+
+var (
+	logger = gostrich.NamedLogger { "[Gassandra]" }
 )
 
 // Keyspace on a particular host
@@ -25,7 +30,9 @@ func (k Keyspace) Name() string {
 func (k Keyspace) Make() (service rpcx.Service, err error) {
 	conn, err := net.Dial("tcp", k.Host)
 	if err != nil {
-		log.Printf("Can't dial to %v on behalf of KeyspaceService", k.Host)
+		logger.LogInfoF(func() interface{}{
+			return fmt.Sprintf("Can't dial to %v on behalf of KeyspaceService", k.Host)
+		})
 		return
 	}
 
@@ -38,7 +45,9 @@ func (k Keyspace) Make() (service rpcx.Service, err error) {
 	err = client.Call("set_keyspace", req, res)
 	switch {
 	case res.Ire != nil:
-		log.Printf("Can't set keyspace to %v on behalf of KeyspaceService", k.Keyspace)
+		logger.LogInfoF(func() interface{}{
+			return fmt.Sprintf("Can't set keyspace to %v on behalf of KeyspaceService", k.Keyspace)
+		})
 		err = res.Ire
 		return
 	}
