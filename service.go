@@ -19,8 +19,10 @@ type Keyspace struct {
 }
 
 // Keyspace is a ServiceMaker
-func (k Keyspace) Make() (name string, service rpcx.Service, err error) {
-	name = "cassandra:" + k.Host
+func (k Keyspace) Name() string {
+	return k.Host
+}
+func (k Keyspace) Make() (service rpcx.Service, err error) {
 	conn, err := net.Dial("tcp", k.Host)
 	if err != nil {
 		log.Printf("Can't dial to %v on behalf of KeyspaceService", k.Host)
