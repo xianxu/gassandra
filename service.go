@@ -3,24 +3,24 @@ package gassandra
 // Simple wrapper of cassandra behind the rpcx.Service, to take advantage of
 // Supervisor, Replaceable and Cluster.
 import (
-	thrift "github.com/samuel/go-thrift"
 	"fmt"
+	thrift "github.com/samuel/go-thrift"
+	"github.com/xianxu/gostrich"
+	"github.com/xianxu/rpcx"
 	"net"
 	"net/rpc"
-	"github.com/xianxu/rpcx"
-	"github.com/xianxu/gostrich"
 	"time"
 )
 
 var (
-	logger = gostrich.NamedLogger { "[Gassandra]" }
+	logger = gostrich.NamedLogger{"[Gassandra]"}
 )
 
 // Keyspace on a particular host
 type Keyspace struct {
 	Host     string
 	Keyspace string
-	Timeout time.Duration
+	Timeout  time.Duration
 }
 
 // Keyspace is a ServiceMaker
@@ -30,7 +30,7 @@ func (k Keyspace) Name() string {
 func (k Keyspace) Make() (service rpcx.Service, err error) {
 	conn, err := net.Dial("tcp", k.Host)
 	if err != nil {
-		logger.LogInfoF(func() interface{}{
+		logger.LogInfoF(func() interface{} {
 			return fmt.Sprintf("Can't dial to %v on behalf of KeyspaceService", k.Host)
 		})
 		return
@@ -45,7 +45,7 @@ func (k Keyspace) Make() (service rpcx.Service, err error) {
 	err = client.Call("set_keyspace", req, res)
 	switch {
 	case res.Ire != nil:
-		logger.LogInfoF(func() interface{}{
+		logger.LogInfoF(func() interface{} {
 			return fmt.Sprintf("Can't set keyspace to %v on behalf of KeyspaceService", k.Keyspace)
 		})
 		err = res.Ire
@@ -57,9 +57,9 @@ func (k Keyspace) Make() (service rpcx.Service, err error) {
 }
 
 type KeyspaceService struct {
-	conn net.Conn              // TODO: used to do Closer on Service
-	client rpcx.RpcClient
-    timeout time.Duration
+	conn    net.Conn // TODO: used to do Closer on Service
+	client  rpcx.RpcClient
+	timeout time.Duration
 }
 
 // KeyspaceService is a Service
